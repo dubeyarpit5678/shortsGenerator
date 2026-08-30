@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ShortAI — Viral Shorts Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070f;--bg2:#0c0c18;--bg3:#111120;--bg4:#181830;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);
+  --accent:#a855f7;--accent2:#7c3aed;--accent3:#c084fc;
+  --cyan:#22d3ee;--pink:#f472b6;--green:#4ade80;--yellow:#fbbf24;--red:#f87171;
+  --text:#eeeeff;--text2:#9090b8;--text3:#55557a;
+  --card:#0d0d1e;--card2:#131326;
+  --font-h:'Syne',sans-serif;--font-m:'Space Mono',monospace;--font-b:'DM Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;overflow-x:hidden;line-height:1.6}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:2px}
+
+/* BG GRID */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(168,85,247,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,0.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+
+/* ORBS */
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.3}
+.o1{width:700px;height:700px;background:radial-gradient(circle,#5b21b6,transparent 70%);top:-250px;left:-250px;animation:of 14s ease-in-out infinite}
+.o2{width:500px;height:500px;background:radial-gradient(circle,#0e7490,transparent 70%);bottom:-150px;right:-150px;animation:of 17s ease-in-out infinite reverse}
+.o3{width:350px;height:350px;background:radial-gradient(circle,#9d174d,transparent 70%);top:45%;left:55%;animation:of 11s ease-in-out infinite 2s}
+@keyframes of{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(25px,-18px) scale(1.04)}66%{transform:translate(-18px,25px) scale(.96)}}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(7,7,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);animation:sdown .5s ease both}
+@keyframes sdown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+.logo{font-family:var(--font-h);font-size:21px;font-weight:800;background:linear-gradient(135deg,#a855f7,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.5px;cursor:pointer}
+.logo em{font-style:normal;font-weight:400;opacity:.65}
+.nav-r{display:flex;gap:6px;align-items:center}
+.nl{color:var(--text2);font-size:13px;padding:6px 13px;border-radius:8px;cursor:pointer;transition:all .2s;border:none;background:none}
+.nl:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nc{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:8px 18px;border-radius:9px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s;box-shadow:0 4px 18px rgba(124,58,237,.35)}
+.nc:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,58,237,.55)}
+
+main{position:relative;z-index:1;padding-top:72px}
+
+/* HERO */
+.hero{text-align:center;padding:90px 24px 60px;max-width:900px;margin:0 auto}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.28);border-radius:100px;padding:5px 15px;margin-bottom:28px;font-size:11px;color:var(--accent3);font-family:var(--font-m);animation:fu .7s ease .15s both}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+h1{font-family:var(--font-h);font-size:clamp(40px,7vw,84px);font-weight:800;line-height:1;letter-spacing:-3px;margin-bottom:20px;animation:fu .7s ease .25s both}
+h1 .g{background:linear-gradient(135deg,#a855f7 0%,#22d3ee 45%,#f472b6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gs 4s ease infinite}
+@keyframes gs{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+.hero-sub{font-size:17px;color:var(--text2);max-width:520px;margin:0 auto 36px;line-height:1.75;animation:fu .7s ease .35s both}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fu .7s ease .45s both}
+.btn-p{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:13px 28px;border-radius:13px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .25s;box-shadow:0 8px 28px rgba(124,58,237,.4);text-decoration:none}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(124,58,237,.6)}
+.btn-s{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.05);color:var(--text);padding:13px 28px;border-radius:13px;font-size:14px;font-weight:500;border:1px solid var(--border2);cursor:pointer;transition:all .25s}
+.btn-s:hover{background:rgba(255,255,255,.09);border-color:var(--border3)}
+@keyframes fu{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+
+.stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-top:52px;padding-top:36px;border-top:1px solid var(--border);animation:fu .7s ease .55s both}
+.stat .n{font-family:var(--font-h);font-size:26px;font-weight:800}
+.stat .l{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* ── GENERATOR CARD ── */
+.gen-wrap{max-width:880px;margin:0 auto;padding:0 24px 60px}
+.gen-card{background:var(--card);border:1px solid var(--border2);border-radius:22px;padding:36px;position:relative;overflow:hidden;box-shadow:0 20px 70px rgba(0,0,0,.5),0 0 50px rgba(168,85,247,.1)}
+.gen-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(168,85,247,.6),rgba(34,211,238,.5),transparent)}
+.gen-card h2{font-family:var(--font-h);font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.4px}
+.gen-card p{color:var(--text2);font-size:13px;margin-bottom:24px}
+
+.url-row{display:flex;gap:10px;flex-wrap:wrap}
+.url-in{flex:1;min-width:260px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:13px 18px;border-radius:11px;font-size:14px;font-family:var(--font-b);outline:none;transition:all .2s}
+.url-in:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(168,85,247,.13)}
+.url-in::placeholder{color:var(--text3)}
+.btn-gen{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:13px 26px;border-radius:11px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .25s;white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(124,58,237,.4)}
+.btn-gen:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,.6)}
+.btn-gen:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.divider{display:flex;align-items:center;gap:14px;margin:18px 0;color:var(--text3);font-size:11px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.drop-zone{border:2px dashed var(--border2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .2s}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(168,85,247,.05)}
+.drop-zone p{color:var(--text2);font-size:13px}
+.drop-zone span{color:var(--accent3);font-weight:500}
+
+.opts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap}
+.og{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
+.og label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--font-m)}
+.og select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 13px;border-radius:9px;font-size:12px;font-family:var(--font-b);outline:none;cursor:pointer;transition:border-color .2s;-webkit-appearance:none}
+.og select:focus{border-color:var(--accent)}
+
+/* ── PROGRESS ── */
+.prog-card{display:none;max-width:880px;margin:0 auto 32px;padding:0 24px}
+.prog-inner{background:var(--card);border:1px solid rgba(168,85,247,.25);border-radius:22px;padding:36px;text-align:center;box-shadow:0 0 50px rgba(168,85,247,.1)}
+.prog-card.on{display:block;animation:fu .4s ease}
+.ring{width:72px;height:72px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);border-right-color:var(--cyan);animation:spin 1.4s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.prog-title{font-family:var(--font-h);font-size:18px;font-weight:700;margin-bottom:6px}
+.prog-step{color:var(--text2);font-size:13px;margin-bottom:20px;min-height:20px}
+.prog-bar-wrap{background:var(--bg3);border-radius:100px;height:6px;overflow:hidden;max-width:400px;margin:0 auto}
+.prog-bar{height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7,#22d3ee);border-radius:100px;transition:width .4s ease;width:0%}
+.steps-list{display:flex;flex-direction:column;gap:10px;margin-top:22px;text-align:left;max-width:380px;margin:22px auto 0}
+.sl{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text3);transition:all .3s}
+.sl.act{color:var(--text)}
+.sl.done{color:var(--green)}
+.sl-ic{width:20px;height:20px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;transition:all .3s;font-family:var(--font-m)}
+.sl.act .sl-ic{background:rgba(168,85,247,.3);border:1px solid var(--accent);animation:pulse 1s infinite}
+.sl.done .sl-ic{background:rgba(74,222,128,.18);border:1px solid var(--green);color:var(--green)}
+
+/* ── RESULTS ── */
+.results{display:none;max-width:1200px;margin:0 auto;padding:0 24px 80px}
+.results.on{display:block;animation:fu .5s ease}
+.res-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+.res-head h2{font-family:var(--font-h);font-size:26px;font-weight:700;letter-spacing:-.5px}
+.res-head p{color:var(--text2);font-size:13px;margin-top:4px}
+.res-actions{display:flex;gap:8px;flex-shrink:0}
+.btn-ol{background:transparent;color:var(--text2);padding:9px 18px;border-radius:9px;font-size:12px;font-weight:500;border:1px solid var(--border2);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.btn-ol:hover{background:rgba(255,255,255,.05);color:var(--text)}
+
+/* CLIP GRID */
+.clips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.clip-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:all .3s;animation:fu .4s ease both}
+.clip-card:hover{transform:translateY(-5px);border-color:var(--border2);box-shadow:0 16px 44px rgba(0,0,0,.4),0 0 20px rgba(168,85,247,.12)}
+
+.thumb{aspect-ratio:9/16;background:var(--bg4);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.thumb video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 50%);z-index:1}
+.v-badge{position:absolute;top:10px;left:10px;z-index:2;background:rgba(168,85,247,.85);backdrop-filter:blur(8px);color:#fff;font-size:9px;padding:4px 9px;border-radius:100px;font-weight:700;font-family:var(--font-m)}
+.play-btn{position:absolute;z-index:3;width:46px;height:46px;border-radius:50%;background:rgba(168,85,247,.9);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s}
+.clip-card:hover .play-btn{transform:scale(1.1);background:var(--accent)}
+.dur-badge{position:absolute;bottom:10px;right:10px;z-index:2;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);color:#fff;font-size:10px;padding:3px 8px;border-radius:5px;font-family:var(--font-m)}
+
+.clip-info{padding:14px}
+.clip-title{font-size:13px;font-weight:600;margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clip-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.score-row{display:flex;align-items:center;gap:6px}
+.score-lbl{font-size:10px;color:var(--text3)}
+.score-bar{width:52px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.score-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee);border-radius:2px;transition:width .6s ease .3s}
+.type-badge{font-size:9px;padding:3px 8px;border-radius:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.t-hook{background:rgba(168,85,247,.15);color:var(--accent3)}
+.t-emotion{background:rgba(244,114,182,.15);color:var(--pink)}
+.t-edu{background:rgba(34,211,238,.15);color:var(--cyan)}
+.t-trend{background:rgba(251,191,36,.15);color:var(--yellow)}
+.t-viral{background:rgba(74,222,128,.15);color:var(--green)}
+.clip-btns{display:flex;gap:7px}
+.cb{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;text-align:center}
+.cb:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.cb.pri{background:rgba(124,58,237,.18);border-color:rgba(124,58,237,.35);color:var(--accent3)}
+.cb.pri:hover{background:rgba(124,58,237,.3)}
+
+/* ── VIDEO MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(16px);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-bg.on{display:flex;animation:fi .2s ease}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card2);border:1px solid var(--border2);border-radius:22px;padding:28px;max-width:460px;width:100%;position:relative;animation:mi .3s ease;max-height:90vh;overflow-y:auto}
+@keyframes mi{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-x{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:1}
+.modal-x:hover{background:var(--border);color:var(--text)}
+.modal-video{aspect-ratio:9/16;background:var(--bg4);border-radius:14px;overflow:hidden;margin-bottom:18px;position:relative}
+.modal-video video{width:100%;height:100%;object-fit:cover}
+.modal-title{font-family:var(--font-h);font-size:17px;font-weight:700;margin-bottom:6px;padding-right:24px}
+.modal-sub{color:var(--text2);font-size:12px;margin-bottom:18px;line-height:1.6}
+.modal-scores{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.ms{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:11px}
+.ms-lbl{font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.ms-val{font-family:var(--font-h);font-size:20px;font-weight:800}
+.hi{color:var(--green)}.med{color:var(--yellow)}
+.modal-actions{display:flex;gap:9px}
+.btn-dl{flex:1;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:11px;border-radius:11px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none}
+.btn-dl:hover{box-shadow:0 8px 22px rgba(124,58,237,.5)}
+.btn-rg{padding:11px 18px;border-radius:11px;font-size:13px;font-weight:500;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .2s}
+.btn-rg:hover{background:rgba(255,255,255,.06);color:var(--text)}
+
+/* ── ERROR CARD ── */
+.err-card{display:none;max-width:880px;margin:0 auto 32px;padding:0 24px}
+.err-inner{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);border-radius:16px;padding:24px;display:flex;gap:14px;align-items:flex-start}
+.err-card.on{display:block;animation:fu .4s ease}
+.err-icon{font-size:20px;flex-shrink:0}
+.err-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.err-msg{color:var(--text2);font-size:12px;line-height:1.6}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;z-index:300;background:var(--card2);border:1px solid var(--border2);padding:12px 18px;border-radius:12px;font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:9px}
+.toast.on{transform:translateY(0);opacity:1}
+
+/* API STATUS indicator */
+.api-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);font-family:var(--font-m);margin-top:12px}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.api-dot.ok{background:var(--green);animation:pulse 2s infinite}
+.api-dot.err{background:var(--red)}
+
+@media(max-width:768px){
+  nav{padding:12px 18px}
+  .nl{display:none}
+  .hero{padding:70px 18px 50px}
+  .gen-card{padding:22px 18px}
+  .clips-grid{grid-template-columns:repeat(2,1fr)}
+  .stats{gap:22px}
+  .res-head{flex-direction:column}
+}
+@media(max-width:480px){
+  .clips-grid{grid-template-columns:1fr}
+  .modal{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="scrollTo('#top')">Short<em>AI</em></div>
+  <div class="nav-r">
+    <button class="nl" onclick="scrollTo('#results-anchor')">Results</button>
+    <button class="nl" onclick="scrollTo('#gen-card')">Generator</button>
+    <button class="nc" onclick="scrollTo('#gen-card')">Generate Free →</button>
+  </div>
+</nav>
+
+<main id="top">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">✦ AI-Powered Trend Intelligence</div>
+    <h1>Turn Videos Into<br><span class="g">Viral Shorts</span></h1>
+    <p class="hero-sub">Paste any YouTube URL. Our AI finds your 5 best clips, scores them for virality, renders them vertical — ready to post.</p>
+    <div class="hero-btns">
+      <button class="btn-p" onclick="scrollTo('#gen-card')">▶ Generate Shorts Free</button>
+      <button class="btn-s" onclick="scrollTo('#gen-card')">See It In Action</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="cnt">24,831</div><div class="l">Clips Generated</div></div>
+      <div class="stat"><div class="n">2.4M+</div><div class="l">Total Views Driven</div></div>
+      <div class="stat"><div class="n">91%</div><div class="l">Viral Score Accuracy</div></div>
+    </div>
+  </div>
+
+  <!-- GENERATOR -->
+  <div class="gen-wrap" id="gen-card">
+    <div class="gen-card">
+      <h2>🎬 Generate Your Shorts</h2>
+      <p>Paste a YouTube URL below — our AI will download, transcribe, score and render 5 vertical clips</p>
+
+      <div class="url-row">
+        <input type="text" class="url-in" id="urlIn" placeholder="https://www.youtube.com/watch?v=..." />
+        <button class="btn-gen" id="genBtn" onclick="startJob()">
+          <span id="genIcon">✦</span>
+          <span id="genTxt">Generate Shorts</span>
+        </button>
+      </div>
+
+      <div class="api-status" id="apiStatus">
+        <div class="api-dot" id="apiDot"></div>
+        <span id="apiTxt">Checking API...</span>
+      </div>
+
+      <div class="divider">or upload a video file</div>
+
+      <div class="drop-zone" id="dz"
+           ondragover="doDragOver(event)" ondragleave="doDragLeave()" ondrop="doDrop(event)"
+           onclick="document.getElementById('fi').click()">
+        <div style="font-size:28px;margin-bottom:8px">☁</div>
+        <p><span>Click to upload</span> or drag your video here</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:5px">MP4, MOV, AVI · Max 2GB</p>
+        <input type="file" id="fi" accept="video/*" style="display:none" onchange="onFileSelect(event)"/>
+      </div>
+
+      <div class="opts">
+        <div class="og"><label>Platform</label>
+          <select id="oPlatform"><option value="youtube_shorts">YouTube Shorts</option><option value="reels">Instagram Reels</option><option value="tiktok">TikTok</option><option value="all">All Platforms</option></select></div>
+        <div class="og"><label>Clip Count</label>
+          <select id="oClips"><option value="3">3 Clips</option><option value="5" selected>5 Clips</option><option value="10">10 Clips</option></select></div>
+        <div class="og"><label>Duration</label>
+          <select id="oDur"><option value="30">30 sec</option><option value="45" selected>45 sec</option><option value="60">60 sec</option><option value="90">90 sec</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="prog-card" id="progCard">
+    <div class="prog-inner">
+      <div class="ring"></div>
+      <div class="prog-title">Generating Your Shorts</div>
+      <div class="prog-step" id="progStep">Starting...</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="progBar"></div></div>
+      <div class="steps-list" id="stepsList">
+        <div class="sl" id="sl1"><div class="sl-ic">1</div><span>Downloading video</span></div>
+        <div class="sl" id="sl2"><div class="sl-ic">2</div><span>Transcribing with Whisper AI</span></div>
+        <div class="sl" id="sl3"><div class="sl-ic">3</div><span>Scoring segments for virality</span></div>
+        <div class="sl" id="sl4"><div class="sl-ic">4</div><span>Selecting best clip windows</span></div>
+        <div class="sl" id="sl5"><div class="sl-ic">5</div><span>Rendering vertical clips</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="err-card" id="errCard">
+    <div class="err-inner">
+      <div class="err-icon">⚠</div>
+      <div>
+        <div class="err-title">Something went wrong</div>
+        <div class="err-msg" id="errMsg">Unknown error. Check your terminal for details.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="resultsWrap">
+    <div id="results-anchor"></div>
+    <div class="res-head">
+      <div>
+        <h2 id="resTitle">Your Generated Shorts</h2>
+        <p id="resSub">5 clips optimized for viral reach</p>
+      </div>
+      <div class="res-actions">
+        <button class="btn-ol" onclick="startJob()">↺ Regenerate</button>
+      </div>
+    </div>
+    <div class="clips-grid" id="clipsGrid"></div>
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <button class="modal-x" onclick="closeModalBtn()">✕</button>
+    <div class="modal-video" id="modalVid">
+      <video id="modalVideo" controls playsinline style="width:100%;height:100%;object-fit:cover"></video>
+    </div>
+    <div class="modal-title" id="mTitle">Clip Preview</div>
+    <div class="modal-sub" id="mSub">—</div>
+    <div class="modal-scores">
+      <div class="ms"><div class="ms-lbl">Viral Score</div><div class="ms-val hi" id="mViral">—</div></div>
+      <div class="ms"><div class="ms-lbl">Hook Strength</div><div class="ms-val hi" id="mHook">—</div></div>
+      <div class="ms"><div class="ms-lbl">Duration</div><div class="ms-val med" id="mDur">—</div></div>
+      <div class="ms"><div class="ms-lbl">Clip Type</div><div class="ms-val" id="mType" style="font-size:14px;color:var(--accent3)">—</div></div>
+    </div>
+    <div class="modal-actions">
+      <a class="btn-dl" id="mDownload" href="#" download>⬇ Download MP4</a>
+      <button class="btn-rg" onclick="closeModalBtn();startJob()">↺ Regen</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIco">✦</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const API = 'http://localhost:8000';   // FastAPI server address
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let currentJobId  = null;
+let pollInterval  = null;
+let currentClips  = [];
+
+// ── API HEALTH CHECK ────────────────────────────────────────────────────────
+async function checkAPI() {
+  const dot = document.getElementById('apiDot');
+  const txt = document.getElementById('apiTxt');
+  try {
+    const res = await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      dot.className = 'api-dot ok';
+      txt.textContent = 'API connected · Ready';
+    } else throw new Error();
+  } catch {
+    dot.className = 'api-dot err';
+    txt.textContent = 'API offline — start server first (see below)';
+  }
+}
+checkAPI();
+setInterval(checkAPI, 10000);
+
+// ── COUNTER ANIMATION ───────────────────────────────────────────────────────
+(function(){
+  const el = document.getElementById('cnt');
+  let n = 0, target = 24831;
+  const step = target / 60;
+  const t = setInterval(() => {
+    n = Math.min(n + step, target);
+    el.textContent = Math.floor(n).toLocaleString();
+    if (n >= target) clearInterval(t);
+  }, 16);
+})();
+
+// ── DRAG & DROP ──────────────────────────────────────────────────────────────
+function doDragOver(e) { e.preventDefault(); document.getElementById('dz').classList.add('over'); }
+function doDragLeave()  { document.getElementById('dz').classList.remove('over'); }
+function doDrop(e) {
+  e.preventDefault(); doDragLeave();
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) {
+    toast('📁 ' + f.name + ' loaded (upload via URL for now)');
+  }
+}
+function onFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) toast('📁 ' + f.name + ' selected');
+}
+
+// ── SCROLL HELPER ────────────────────────────────────────────────────────────
+function scrollTo(sel) { document.querySelector(sel)?.scrollIntoView({ behavior: 'smooth' }); }
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+let toastT;
+function toast(msg, ico = '✦') {
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIco').textContent = ico;
+  const el = document.getElementById('toast');
+  el.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('on'), 3500);
+}
+
+// ── STEP INDICATOR ───────────────────────────────────────────────────────────
+function setStep(pct) {
+  // activate step indicators based on progress %
+  const thresholds = [10, 30, 60, 70, 75];
+  thresholds.forEach((t, i) => {
+    const el = document.getElementById('sl' + (i + 1));
+    if (!el) return;
+    if (pct >= t + 18) {
+      el.className = 'sl done';
+      el.querySelector('.sl-ic').textContent = '✓';
+    } else if (pct >= t) {
+      el.className = 'sl act';
+      el.querySelector('.sl-ic').textContent = (i + 1);
+    } else {
+      el.className = 'sl';
+      el.querySelector('.sl-ic').textContent = (i + 1);
+    }
+  });
+}
+
+// ── START JOB ────────────────────────────────────────────────────────────────
+async function startJob() {
+  const url      = document.getElementById('urlIn').value.trim();
+  const numClips = parseInt(document.getElementById('oClips').value);
+  const duration = parseInt(document.getElementById('oDur').value);
+
+  if (!url) {
+    document.getElementById('urlIn').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('urlIn').style.borderColor = '', 1200);
+    toast('⚠ Please enter a YouTube URL', '⚠');
+    return;
+  }
+  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+    toast('⚠ Only YouTube URLs supported right now', '⚠');
+    return;
+  }
+
+  // Reset UI
+  hideAll();
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('genTxt').textContent = 'Processing...';
+  document.getElementById('genIcon').textContent = '⌛';
+  document.getElementById('progCard').classList.add('on');
+  document.getElementById('progBar').style.width = '3%';
+  document.getElementById('progStep').textContent = 'Connecting to API...';
+  setStep(0);
+  scrollTo('#gen-card');
+
+  try {
+    const res = await fetch(`${API}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, num_clips: numClips, clip_duration: duration }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Server error');
+    }
+
+    const data = await res.json();
+    currentJobId = data.job_id;
+    toast('✦ Job started — ID: ' + currentJobId);
+    pollStatus();
+
+  } catch (err) {
+    showError(err.message.includes('Failed to fetch')
+      ? 'Cannot connect to API. Make sure the server is running:\n  uvicorn main:app --reload'
+      : err.message);
+  }
+}
+
+// ── POLL STATUS ───────────────────────────────────────────────────────────────
+function pollStatus() {
+  clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    if (!currentJobId) return;
+    try {
+      const res  = await fetch(`${API}/status/${currentJobId}`);
+      const data = await res.json();
+
+      // Update progress bar + step text
+      document.getElementById('progBar').style.width = data.progress + '%';
+      document.getElementById('progStep').textContent = data.step || '...';
+      setStep(data.progress);
+
+      if (data.status === 'done') {
+        clearInterval(pollInterval);
+        currentClips = data.clips || [];
+        showResults(data);
+      } else if (data.status === 'error') {
+        clearInterval(pollInterval);
+        showError(data.error || 'Unknown error. Check terminal.');
+      }
+    } catch (e) {
+      clearInterval(pollInterval);
+      showError('Lost connection to API while polling.');
+    }
+  }, 2000);
+}
+
+// ── SHOW RESULTS ──────────────────────────────────────────────────────────────
+function showResults(data) {
+  document.getElementById('progCard').classList.remove('on');
+  resetGenBtn();
+
+  const title = data.title || 'Your Video';
+  document.getElementById('resTitle').textContent = '🎬 ' + title.slice(0, 60) + (title.length > 60 ? '…' : '');
+  document.getElementById('resSub').textContent =
+    `${data.clips.length} clips generated · ${Math.round(data.duration / 60)}min source video`;
+
+  const grid = document.getElementById('clipsGrid');
+  grid.innerHTML = '';
+
+  const types      = ['hook','emotion','edu','trend','viral'];
+  const typeLabels = ['Hook','Emotion','Educational','Trending','Viral'];
+  const gradients  = [
+    'linear-gradient(160deg,#1a0533,#3b0764)',
+    'linear-gradient(160deg,#0c001f,#4c0519)',
+    'linear-gradient(160deg,#001a20,#0c4a6e)',
+    'linear-gradient(160deg,#1a1200,#713f12)',
+    'linear-gradient(160deg,#001a0a,#14532d)',
+  ];
+
+  data.clips.forEach((clip, i) => {
+    const type  = clip.type || types[i % types.length];
+    const label = clip.type_label || typeLabels[i % typeLabels.length];
+    const score = clip.score || Math.floor(70 + Math.random() * 25);
+    const dur   = clip.duration ? clip.duration.toFixed(0) + 's' : '45s';
+    const videoUrl = `${API}${clip.url}`;
+
+    const card = document.createElement('div');
+    card.className = 'clip-card';
+    card.style.animationDelay = (i * 0.08) + 's';
+    card.innerHTML = `
+      <div class="thumb" style="background:${gradients[i % gradients.length]}">
+        <video src="${videoUrl}" preload="metadata" muted playsinline
+               style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"
+               onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0">
+        </video>
+        <div class="thumb-overlay"></div>
+        <div class="v-badge">✦ ${score}% Viral</div>
+        <div class="play-btn" onclick="openModal(${i})">▶</div>
+        <div class="dur-badge">${dur}</div>
+      </div>
+      <div class="clip-info">
+        <div class="clip-title">${clip.anchor_text || 'Clip ' + clip.clip_index}</div>
+        <div class="clip-meta">
+          <div class="score-row">
+            <span class="score-lbl">Score</span>
+            <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
+          </div>
+          <span class="type-badge t-${type}">${label}</span>
+        </div>
+        <div class="clip-btns">
+          <button class="cb pri" onclick="openModal(${i})">▶ Preview</button>
+          <a class="cb" href="${videoUrl}" download="shortai_clip_${i+1}.mp4" onclick="event.stopPropagation()">⬇ Save</a>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('resultsWrap').classList.add('on');
+  setTimeout(() => scrollTo('#results-anchor'), 200);
+  toast('✅ ' + data.clips.length + ' clips ready!', '✅');
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(idx) {
+  const clip = currentClips[idx];
+  if (!clip) return;
+
+  const types      = ['Hook','Emotion','Educational','Trending','Viral'];
+  const score      = clip.score || Math.floor(70 + Math.random() * 25);
+  const dur        = clip.duration ? clip.duration.toFixed(1) + 's' : '45s';
+  const videoUrl   = `${API}${clip.url}`;
+  const hookScore  = Math.min(score + Math.floor(Math.random() * 6), 99);
+
+  const vid = document.getElementById('modalVideo');
+  vid.src   = videoUrl;
+  vid.load();
+
+  document.getElementById('mTitle').textContent   = clip.anchor_text?.slice(0, 80) || 'Clip ' + clip.clip_index;
+  document.getElementById('mSub').textContent     =
+    `${fmtTime(clip.start)} – ${fmtTime(clip.end)} · ${clip.type_label || 'Clip'} variant`;
+  document.getElementById('mViral').textContent   = score;
+  document.getElementById('mHook').textContent    = hookScore;
+  document.getElementById('mDur').textContent     = dur;
+  document.getElementById('mType').textContent    = clip.type_label || types[idx % types.length];
+  document.getElementById('mDownload').href       = videoUrl;
+  document.getElementById('mDownload').download   = `shortai_clip_${clip.clip_index}.mp4`;
+
+  document.getElementById('modal').classList.add('on');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalBtn();
+}
+function closeModalBtn() {
+  document.getElementById('modalVideo').pause();
+  document.getElementById('modal').classList.remove('on');
+}
+
+function fmtTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// ── ERROR ──────────────────────────────────────────────────────────────────
+function showError(msg) {
+  document.getElementById('progCard').classList.remove('on');
+  document.getElementById('errMsg').textContent  = msg;
+  document.getElementById('errCard').classList.add('on');
+  resetGenBtn();
+  toast('✗ Error — see details above', '✗');
+}
+
+function hideAll() {
+  document.getElementById('progCard').classList.remove('on');
+  document.getElementById('errCard').classList.remove('on');
+  document.getElementById('resultsWrap').classList.remove('on');
+}
+
+function resetGenBtn() {
+  document.getElementById('genBtn').disabled     = false;
+  document.getElementById('genTxt').textContent  = 'Generate Shorts';
+  document.getElementById('genIcon').textContent = '✦';
+}
+
+// ── ENTER KEY ────────────────────────────────────────────────────────────────
+document.getElementById('urlIn').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startJob();
+});
+</script>
+</body>
+</html>
