@@ -2,6 +2,20 @@
 
 ShortAI turns a long YouTube video into a set of short, vertical MP4 clips. It downloads the source audio, transcribes it, scores transcript segments for short-form potential, selects non-overlapping windows, downloads only those video sections, tracks faces, crops to 9:16, burns in captions, and exposes the finished clips through a FastAPI API and browser interface.
 
+
+## Current Implementation Status
+
+### Frontend
+- Stack: React, TypeScript, and Vite.
+- Verification: Production build succeeds with `npm run build`.
+- Scope: Frontend bootstrap only; video-generation functionality is not yet implemented or verified.
+
+### Planned Work
+- Backend API
+- Redis-backed background task processing
+- Video transcription and highlight selection
+- Clip rendering and frontend-backend integration
+
 ## Features
 
 - YouTube URL input with configurable clip count and duration
