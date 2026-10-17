@@ -1,12 +1,51 @@
-backend/downloads/
-backend/outputs/
-backend/.env
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
+backend/.env*
+!backend/.env.example
+frontend/.env*
+!frontend/.env.example
+
+# Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
+ENV/
+pip-wheel-metadata/
+
+# Generated application data
+backend/downloads/
+backend/outputs/
+outputs/
+downloads/
+
+# Node.js and frontend builds
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Testing and tooling
+coverage/
+.nyc_output/
+.eslintcache/
+
+# IDE and operating system
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
