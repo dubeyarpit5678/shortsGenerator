@@ -1,213 +1,302 @@
 # ShortAI
 
-ShortAI turns a long YouTube video into a set of short, vertical MP4 clips. It downloads the source audio, transcribes it, scores transcript segments for short-form potential, selects non-overlapping windows, downloads only those video sections, tracks faces, crops to 9:16, burns in captions, and exposes the finished clips through a FastAPI API and browser interface.
+ShortAI is a project to turn long YouTube videos into short, vertical clips suitable for platforms such as YouTube Shorts, Instagram Reels, and TikTok.
 
+The planned workflow includes audio transcription, highlight selection, subject-aware cropping, caption generation, and MP4 rendering.
+
+The repository currently contains a React, TypeScript, and Vite frontend foundation and a FastAPI backend foundation with a health-check endpoint. The complete video-processing pipeline and end-to-end application workflow are not yet implemented or verified.
 
 ## Current Implementation Status
 
 ### Frontend
-- Stack: React, TypeScript, and Vite.
-- Verification: Production build succeeds with `npm run build`.
-- Scope: Frontend bootstrap only; video-generation functionality is not yet implemented or verified.
+
+- **Framework:** React
+- **Language:** TypeScript
+- **Build tool:** Vite
+- **Verification:** Production build succeeds with `npm run build`.
+- **Status:** Frontend foundation implemented. Video-generation functionality and backend integration are not yet implemented or verified.
+
+### Backend
+
+- **Framework:** FastAPI
+- **Server:** Uvicorn
+- **Configuration:** The allowed frontend origin is configurable through the `FRONTEND_ORIGIN` environment variable.
+- **Health endpoint:** `GET /health`
+- **API documentation:** Available at `/docs` when the server is running.
+- **Testing:** The health endpoint test passes with pytest.
+- **Status:** Backend foundation implemented and verified.
 
 ### Planned Work
-- Backend API
-- Redis-backed background task processing
-- Video transcription and highlight selection
-- Clip rendering and frontend-backend integration
 
-## Features
+1. Implement video-generation API endpoints and request/response schemas.
+2. Add Redis-backed background job processing.
+3. Implement audio transcription and highlight selection.
+4. Build the video download, cropping, subtitle, and rendering pipeline.
+5. Integrate the frontend with the backend.
+6. Add job progress tracking, clip previews, and MP4 downloads.
 
-- YouTube URL input with configurable clip count and duration
-- English, Hindi, and Hinglish transcript analysis
-- CPU-friendly transcription with `faster-whisper` and an OpenAI Whisper fallback
-- Hook scoring enriched with Google Trends and optional RapidAPI sources
-- Partial video downloads rather than storing the entire source video
-- OpenCV face detection for subject-aware 9:16 cropping
-- FFmpeg rendering with burned-in subtitles
-- Background generation jobs with live progress polling
-- Preview and MP4 download interface
+## Planned Features
 
-Direct file upload and platform-specific rendering presets are visible in the interface but are not implemented yet.
+The following features describe the intended direction of ShortAI and are not yet implemented or verified as a complete workflow.
 
-## Technology stack
+- Accept a YouTube URL and configurable clip count and duration.
+- Transcribe audio using `faster-whisper` or an alternative Whisper implementation.
+- Analyze English, Hindi, and Hinglish transcripts.
+- Score transcript segments for short-form potential.
+- Select non-overlapping clip windows.
+- Download only the selected video sections where technically supported.
+- Detect faces and calculate subject-aware 9:16 crops.
+- Render vertical MP4 clips with burned-in subtitles using FFmpeg.
+- Run generation jobs in the background and report progress.
+- Preview and download generated clips through a browser interface.
+- Explore optional trend enrichment to improve highlight selection.
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | HTML5, CSS3, vanilla JavaScript ES modules |
-| API | Python, FastAPI, Pydantic, Uvicorn |
-| Transcription | faster-whisper; OpenAI Whisper fallback |
-| Media | yt-dlp, FFmpeg/FFprobe, OpenCV, NumPy |
-| Language/trends | langdetect, pytrends, Requests, optional RapidAPI |
-| Storage | Local audio, MP4, SRT, and JSON files |
+Direct file uploads and platform-specific rendering presets are not part of the currently verified implementation.
 
-## Project structure
+## Technology Stack
+
+| Layer | Technology | Status |
+|---|---|---|
+| Frontend | React, TypeScript, Vite | Foundation implemented |
+| API | Python, FastAPI, Uvicorn | Foundation implemented |
+| Testing | pytest, FastAPI test client | Health endpoint tested |
+| Background jobs | Redis, RQ | Planned |
+| Transcription | faster-whisper or Whisper | Planned |
+| Video downloading | yt-dlp | Planned |
+| Media processing | FFmpeg, FFprobe, OpenCV, NumPy | Planned |
+| Language detection | langdetect | Planned |
+| Trend enrichment | pytrends, Requests, optional RapidAPI | Planned |
+| Storage | Local media and metadata files | Planned |
+
+The planned technologies may change as the architecture develops.
+
+## Project Structure
+
+The current repository structure includes the following components. The frontend and backend may contain additional configuration, styling, and tooling files.
 
 ```text
 shortsGenerator/
 ├── frontend/
-│   ├── index.html                 # Semantic page markup
-│   └── assets/
-│       ├── css/
-│       │   └── styles.css         # Design system and responsive styles
-│       └── js/
-│           ├── config.js          # Browser runtime configuration
-│           ├── api.js             # API client
-│           ├── ui.js              # Shared DOM/UI helpers
-│           ├── clips.js           # Clip cards and preview modal
-│           └── app.js             # Event binding and job workflow
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   └── src/
+│       ├── App.tsx
+│       ├── main.tsx
+│       └── ...
 ├── backend/
 │   ├── app/
-│   │   ├── api/
-│   │   │   └── routes.py          # HTTP endpoints
-│   │   ├── core/
-│   │   │   └── config.py          # Paths and environment settings
-│   │   ├── models/
-│   │   │   └── jobs.py            # Request/response schemas
-│   │   ├── services/
-│   │   │   └── job_service.py     # Job state and orchestration
-│   │   ├── processing/
-│   │   │   └── engine.py          # Media/AI generation pipeline
-│   │   └── main.py                # FastAPI application factory
-│   ├── downloads/                 # Temporary source audio/sections (ignored)
-│   ├── outputs/                   # Generated clips and metadata (ignored)
-│   ├── .env.example
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── main.py
+│   ├── tests/
+│   │   └── test_health.py
 │   └── requirements.txt
 ├── .gitignore
 └── README.md
 ```
 
-The processing engine remains one cohesive domain module because its transcription timestamps, crop filters, subtitle generation, and render commands share one pipeline. HTTP, validation, configuration, and job state no longer live inside it.
-
-## Application flow
-
-```mermaid
-flowchart TD
-    A[User enters YouTube URL] --> B[POST /generate]
-    B --> C[Create in-memory job]
-    C --> D[Run generation in background]
-    D --> E[Fetch YouTube metadata]
-    E --> F[Download audio and fetch trends in parallel]
-    F --> G[Transcribe with Whisper]
-    G --> H[Detect English, Hindi, or Hinglish]
-    H --> I[Score transcript segments]
-    I --> J[Select non-overlapping clip windows]
-    J --> K[Download selected video sections]
-    K --> L[Detect faces and calculate 9:16 crop]
-    L --> M[Create subtitles and render with FFmpeg]
-    M --> N[Save MP4 and JSON metadata]
-    N --> O[GET /status returns completed clips]
-    O --> P[Frontend previews or downloads clips]
-```
-
-While the background task runs, the frontend calls `GET /status/{job_id}` every two seconds and updates the progress interface.
+Generated build files, virtual environments, dependencies, and other local artifacts should not be committed unless explicitly required.
 
 ## Prerequisites
 
-- Python 3.10 or newer
-- FFmpeg and FFprobe available on `PATH`
-- Internet access for YouTube downloads, model downloads, and trend requests
+- Python 3.10 or newer.
+- Node.js and npm.
+- Git.
 
-Confirm FFmpeg is installed:
-
-```powershell
-ffmpeg -version
-ffprobe -version
-```
+FFmpeg, FFprobe, and internet access for source-media and model downloads will be required when the video-processing pipeline is implemented.
 
 ## Installation
 
-From the project root in PowerShell:
+Clone the repository and move into the project directory:
 
-```powershell
+```bash
+git clone <your-repository-url>
+cd shortsGenerator
+```
+
+Replace `<your-repository-url>` with the URL of your Git repository.
+
+### Set Up the Backend
+
+From the repository root, run:
+
+```bash
+cd backend
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+source .venv/Scripts/activate
 python -m pip install --upgrade pip
-pip install -r backend\requirements.txt
-Copy-Item backend\.env.example backend\.env
+python -m pip install -r requirements.txt
 ```
 
-`RAPIDAPI_KEY` is optional. Without it, Instagram and X/Twitter trend enrichment is skipped and the engine uses Google Trends plus its built-in vocabulary.
+The activation command above is for Git Bash on Windows. On macOS or Linux, use:
 
-## Run the application
-
-Start the API from the project root:
-
-```powershell
-uvicorn app.main:app --reload --app-dir backend
+```bash
+source .venv/bin/activate
 ```
 
-Then open:
+### Set Up the Frontend
 
-- Application: <http://localhost:8000/app/>
-- Interactive API documentation: <http://localhost:8000/docs>
-- Health check: <http://localhost:8000/health>
+Open a second terminal from the repository root:
 
-The frontend defaults to `http://localhost:8000`. To point it at another API before `app.js` loads, set `window.SHORTAI_API_URL` in the hosting page or change `frontend/assets/js/config.js`.
+```bash
+cd frontend
+npm install
+```
 
-## API
+## Run the Application
 
-### Start a job
+The frontend and backend currently run independently. The complete video-generation workflow is not yet integrated.
 
-```http
-POST /generate
-Content-Type: application/json
+### Start the Backend
 
+From the repository root:
+
+```bash
+cd backend
+```
+
+Activate the virtual environment if it is not already active, then start the API:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The backend is available at:
+
+- **API base URL:** `http://127.0.0.1:8000`
+- **Health check:** `http://127.0.0.1:8000/health`
+- **Interactive API documentation:** `http://127.0.0.1:8000/docs`
+
+The health endpoint returns:
+
+```json
 {
-  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
-  "platform": "youtube_shorts",
-  "num_clips": 3,
-  "clip_duration": 30
+  "status": "ok"
 }
 ```
 
-The response contains a short `job_id`. Generation continues in a background task.
+### Start the Frontend
 
-### Check progress
+In a second terminal:
 
-```http
-GET /status/{job_id}
+```bash
+cd frontend
+npm run dev
 ```
 
-Status moves through `queued`, `processing`, and then `done` or `error`.
+Open the local URL printed by Vite, typically `http://localhost:5173`.
 
-### Retrieve a clip
+The frontend is currently a development foundation. Video generation, job tracking, and clip downloads are not yet connected to the backend.
 
-```http
-GET /clips/{filename}
+### Build the Frontend
+
+From the `frontend` directory:
+
+```bash
+npm run build
 ```
 
-### Remove job state
+This creates a production build using Vite.
 
-```http
-DELETE /jobs/{job_id}
-```
+## API
 
-Deleting a job removes only its in-memory status. It does not delete generated media.
+### Implemented Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Returns the API health status. |
+
+### Planned Endpoints
+
+The following endpoints are potential parts of the future API and are not implemented yet:
+
+| Method | Endpoint | Intended purpose |
+|---|---|---|
+| `POST` | `/generate` | Start a clip-generation job. |
+| `GET` | `/status/{job_id}` | Retrieve job status and progress. |
+| `GET` | `/clips/{filename}` | Retrieve a generated clip. |
+| `DELETE` | `/jobs/{job_id}` | Remove a job record. |
+
+The final routes and response schemas will be documented once implemented and tested.
 
 ## Configuration
 
 | Variable | Required | Purpose |
-| --- | --- | --- |
-| `RAPIDAPI_KEY` | No | Enables optional Instagram and X/Twitter trend requests |
-| `SHORTAI_ALLOWED_ORIGINS` | No | Comma-separated CORS origins; defaults to `*` |
+|---|---|---|
+| `FRONTEND_ORIGIN` | No | Specifies the allowed frontend origin for CORS. Defaults to `http://localhost:5173`. |
 
-Whisper model size, default clip settings, face sampling interval, and output encoding settings are currently defined near the top of `backend/app/processing/engine.py`.
+For example, in Git Bash:
 
-## Generated data
+```bash
+export FRONTEND_ORIGIN="http://localhost:5173"
+```
 
-- Temporary downloads are written to `backend/downloads/`.
-- Rendered clips and transcript metadata are written to `backend/outputs/`.
-- Both directories are excluded from Git.
-- Job status is kept in process memory, so restarting the API clears job records but leaves output files in place.
+Set the variable in the terminal before starting Uvicorn. The current backend uses this setting to configure its allowed frontend origin.
 
-## Current limitations
+Additional configuration for transcription models, media processing, trend sources, and output storage will be introduced as those features are implemented.
 
-- Only YouTube URLs are accepted by the API.
-- Direct uploads are not connected to a backend endpoint.
-- The platform field is accepted but does not yet alter render presets.
-- Jobs are in-memory and are not suitable for multiple API workers.
-- CPU transcription and video rendering can be slow on long sources.
-- This local prototype has no authentication, rate limiting, database, queue, or cloud storage.
+## Planned Application Flow
 
-For production use, move jobs to Redis or a database, run rendering in a worker queue, store media in object storage, restrict CORS, validate URLs more strictly, and add authentication and cleanup policies.
+The following diagram describes the intended workflow, not the current implementation.
+
+```mermaid
+flowchart TD
+    A[User submits YouTube URL] --> B[Create generation job]
+    B --> C[Retrieve source metadata]
+    C --> D[Download audio]
+    D --> E[Transcribe audio]
+    E --> F[Analyze transcript]
+    F --> G[Score potential highlights]
+    G --> H[Select non-overlapping clips]
+    H --> I[Download selected video sections]
+    I --> J[Calculate vertical crop]
+    J --> K[Generate subtitles]
+    K --> L[Render MP4 clips]
+    L --> M[Save clips and metadata]
+    M --> N[Return results to frontend]
+    N --> O[Preview or download clips]
+```
+
+## Testing
+
+Run the backend health endpoint test from the `backend` directory with the virtual environment activated:
+
+```bash
+python -m pytest tests/test_health.py -v
+```
+
+The test verifies that `GET /health` returns HTTP `200` and the expected JSON response.
+
+## Current Limitations
+
+- Only the backend health endpoint is currently implemented.
+- The frontend and backend are not yet connected into a complete application workflow.
+- YouTube downloading, transcription, highlight scoring, and video rendering are not yet implemented or verified.
+- Redis-backed background jobs and persistent job storage are not yet implemented.
+- Generated clips, progress polling, and download endpoints are not yet available.
+- Authentication, rate limiting, production deployment, and cloud storage have not yet been implemented.
+
+## Development Roadmap
+
+- [x] Initialize the React, TypeScript, and Vite frontend.
+- [x] Initialize the FastAPI backend.
+- [x] Add a health-check endpoint.
+- [x] Add a health endpoint test.
+- [ ] Define video-generation request and response schemas.
+- [ ] Implement job creation and status tracking.
+- [ ] Add Redis-backed background workers.
+- [ ] Implement transcription and highlight selection.
+- [ ] Implement vertical clip rendering and subtitle generation.
+- [ ] Integrate the frontend with the backend.
+- [ ] Add end-to-end tests and deployment configuration.
+
+## Contributing
+
+Contributions and suggestions are welcome. Keep documentation aligned with the code: mark features as implemented only after they exist and have been tested.
+
+## License
+
+A license has not yet been specified. Add a `LICENSE` file before presenting the project as open source under a particular license.
